@@ -1,25 +1,30 @@
 package com.nafis.groupchat.entity;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+@Builder
+
+public class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String content;
 
-    @Column(unique = true)
-    private String email;
+    private LocalDateTime sentAt;
 
-    private String password;
+    @ManyToOne
+    private User sender;
+
+    @ManyToOne
+    private ChatRoom room;
 }

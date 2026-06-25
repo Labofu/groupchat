@@ -35,10 +35,18 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
         System.out.println("JWT FILTER HIT");
+        System.out.println("URI = " + request.getRequestURI());
+        System.out.println("PATH = " + request.getServletPath());
+        System.out.println("AUTH = " + request.getHeader("Authorization"));
+
         System.out.println(request.getHeader("Authorization"));
-        // Skip auth endpoints
-        if (request.getServletPath().startsWith("/auth")) {
+        // Skip public auth endpoints and web socket handshake
+        if (request.getServletPath().equals("/auth/login")
+                || request.getServletPath().equals("/auth/register")
+                || request.getServletPath().startsWith("/chat")) {
+
             filterChain.doFilter(request, response);
             return;
         }

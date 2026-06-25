@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ordo - Premium Group Messaging</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header>
+    <div class="navbar">
+      <a href="#home" class="brand">
+        <div class="brand-icon">O</div>
+        <span>Ordo</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#home" class="nav-link" id="nav-home">Home</a></li>
+          <li><a href="#chat" class="nav-link" id="nav-chat" style="display: none;">Rooms</a></li>
+          <li><a href="#profile" class="nav-link" id="nav-profile" style="display: none;">Profile</a></li>
+          <li><a href="#login" class="nav-link" id="nav-login">Login</a></li>
+          <li><a href="#register" class="nav-link" id="nav-register">Register</a></li>
+        </ul>
+      </nav>
+      <div class="nav-user" id="nav-user-container" style="display: none;">
+        <span class="avatar-nav" id="nav-user-avatar">?</span>
+        <button class="btn btn-secondary" id="btn-logout" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Views -->
+  <main class="app-container">
+
+    <!-- Home View -->
+    <section id="view-home" class="view active">
+      <div class="hero">
+        <h1>Connect. Collaborate. Share in Real-Time.</h1>
+        <p>Experience a premium, secure, and blazing fast group chat application built with modern glassmorphic aesthetics. Create custom chat rooms, invite friends, and exchange messages instantly.</p>
+        <div class="hero-actions">
+          <a href="#register" class="btn btn-primary" id="hero-cta-btn">Get Started</a>
+          <a href="#login" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Login View -->
+    <section id="view-login" class="view">
+      <div class="auth-container card-glass">
+        <div class="auth-header">
+          <h2>Welcome Back</h2>
+          <p>Login to access your chat rooms</p>
+        </div>
+        <form id="form-login">
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" class="input-glass" placeholder="you@example.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="input-glass" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Log In</button>
+        </form>
+        <div class="auth-footer">
+          Don't have an account? <a href="#register">Register here</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Register View -->
+    <section id="view-register" class="view">
+      <div class="auth-container card-glass">
+        <div class="auth-header">
+          <h2>Create Account</h2>
+          <p>Sign up to start messaging</p>
+        </div>
+        <form id="form-register">
+          <div class="form-group">
+            <label for="register-name">Full Name</label>
+            <input type="text" id="register-name" class="input-glass" placeholder="John Doe" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="register-email">Email Address</label>
+            <input type="email" id="register-email" class="input-glass" placeholder="john@example.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" class="input-glass" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label for="register-confirm-password">Confirm Password</label>
+            <input type="password" id="register-confirm-password" class="input-glass" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create Account</button>
+        </form>
+        <div class="auth-footer">
+          Already have an account? <a href="#login">Login here</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile View -->
+    <section id="view-profile" class="view">
+      <div class="profile-card card-glass">
+        <div class="profile-avatar" id="profile-avatar-char">U</div>
+        <h2 id="profile-name">User Name</h2>
+        <p style="color: var(--text-muted);" id="profile-email">email@example.com</p>
+        
+        <div class="profile-details">
+          <div class="profile-item">
+            <span class="profile-label">User ID</span>
+            <span class="profile-value" id="profile-id">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="profile-label">Current Role</span>
+            <span class="profile-value">Standard User</span>
+          </div>
+          <div class="profile-item">
+            <span class="profile-label">Account Status</span>
+            <span class="profile-value" style="color: var(--secondary);">Active</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat Dashboard View -->
+    <section id="view-chat" class="view" style="height: 100%;">
+      <div class="chat-layout">
+        
+        <!-- Sidebar -->
+        <aside class="chat-sidebar">
+          <div class="sidebar-header">
+            <h3>Chat Rooms</h3>
+            <button class="btn btn-primary" id="btn-open-create-room" style="padding: 0.5rem 0.8rem; font-size: 0.85rem;">+ New</button>
+          </div>
+          <div class="rooms-list" id="chat-rooms-list">
+            <!-- Dynamically populated room items -->
+            <div class="chat-placeholder" style="padding: 1.5rem; font-size: 0.9rem;">
+              Loading rooms...
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Chat Pane -->
+        <section class="chat-pane">
+          
+          <!-- State 1: No Chat Selected -->
+          <div class="chat-placeholder" id="chat-no-active-room">
+            <div class="chat-placeholder-icon">💬</div>
+            <h3>No Chat Selected</h3>
+            <p style="margin-top: 0.5rem;">Select a room from the sidebar or create a new one to start talking.</p>
+          </div>
+
+          <!-- State 2: Active Chat -->
+          <div id="chat-active-window" style="display: none; flex-direction: column; height: 100%; width: 100%;">
+            
+            <!-- Chat Header -->
+            <div class="chat-header">
+              <div>
+                <div class="chat-room-title" id="chat-active-room-name">Developer Hangout</div>
+                <div class="chat-room-subtitle">Created by <span id="chat-active-room-creator">Admin</span></div>
+              </div>
+              <div class="chat-actions">
+                <button class="btn btn-secondary" id="btn-open-add-member" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Add Member</button>
+              </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="chat-messages" id="chat-messages-container">
+              <!-- Dynamically populated chat bubbles -->
+            </div>
+
+            <!-- Input Footer -->
+            <div class="chat-footer">
+              <form class="chat-input-form" id="chat-send-form">
+                <input type="text" id="chat-message-input" class="input-glass" placeholder="Type a message..." required autocomplete="off">
+                <button type="submit" class="btn btn-primary">Send</button>
+              </form>
+            </div>
+
+          </div>
+
+        </section>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Create Room Modal -->
+  <div class="modal-overlay" id="modal-create-room">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Create New Room</span>
+        <button class="modal-close" id="btn-close-create-room">&times;</button>
+      </div>
+      <form id="form-create-room">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="new-room-name">Room Name</label>
+            <input type="text" id="new-room-name" class="input-glass" placeholder="e.g. Project Discussions" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-create-room">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Room</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Member Modal -->
+  <div class="modal-overlay" id="modal-add-member">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Add Member to Room</span>
+        <button class="modal-close" id="btn-close-add-member">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Select a registered user to invite:</label>
+          <div class="user-select-list" id="modal-user-list">
+            <!-- Dynamically populated user rows -->
+            <div style="text-align: center; color: var(--text-muted); padding: 1rem;">Loading users...</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-add-member">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Modal -->
+  <div class="modal-overlay" id="modal-user-profile">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="user-profile-modal-title">User Profile</span>
+        <button class="modal-close" id="btn-close-user-profile">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 2rem;">
+        <div class="profile-avatar" id="modal-view-profile-avatar" style="margin: 0 auto 1.5rem auto;">?</div>
+        <h3 id="modal-view-profile-name">Name</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;" id="modal-view-profile-email">email@example.com</p>
+        
+        <div class="profile-details" style="margin-top: 1rem;">
+          <div class="profile-item">
+            <span class="profile-label">User ID</span>
+            <span class="profile-value" id="modal-view-profile-id">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-close-view-profile-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- STOMP WebSocket Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+
+</body>
+</html>

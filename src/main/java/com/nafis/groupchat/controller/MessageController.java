@@ -20,7 +20,7 @@ public class MessageController {
         this.messageService = messageService;
     }
     @PostMapping("/{roomId}/messages")
-    public String sendMessage(
+    public MessageResponseDTO sendMessage(
             @PathVariable Long roomId,
             @RequestBody SendMessageRequestDTO request,
             Authentication authentication
@@ -28,13 +28,11 @@ public class MessageController {
 
         String email = authentication.getName();
 
-        messageService.sendMessage(
+        return messageService.sendMessage(
                 roomId,
                 email,
                 request
         );
-
-        return "Message Sent";
     }
 
     @GetMapping("/{roomId}/messages")

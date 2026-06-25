@@ -64,7 +64,10 @@ public class ChatRoomController {
     }
 
     @GetMapping
-    public List<ChatRoom> getAllRooms() {
-        return chatRoomService.getAllRooms();
+    public List<ChatRoom> getAllRooms(Authentication authentication) {
+        if (authentication == null) {
+            return java.util.Collections.emptyList();
+        }
+        return chatRoomService.getRoomsForUser(authentication.getName());
     }
 }

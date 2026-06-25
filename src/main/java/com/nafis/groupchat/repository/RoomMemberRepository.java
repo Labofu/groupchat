@@ -17,4 +17,5 @@ public interface RoomMemberRepository
 
     List<RoomMember> findByRoom_Id(Long roomId);
 
+    List<RoomMember> findByUser(User user);
 }

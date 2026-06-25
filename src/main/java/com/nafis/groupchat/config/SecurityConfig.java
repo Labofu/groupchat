@@ -34,7 +34,9 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/chat").permitAll()
+                        .requestMatchers("/chat**").permitAll()
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(
                         jwtFilter,
@@ -44,7 +46,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

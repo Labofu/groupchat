@@ -1,22 +1,17 @@
 package com.nafis.groupchat.dto;
 
 import lombok.*;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageResponseDTO {
+public class ChatMessageDTO {
 
     private Long id;
     private String content;
-    private LocalDateTime sentAt;
-
-    private Long senderId;
     private String senderName;
+    private Long senderId;
     private String senderEmail;
-    private List<ReactionDTO> reactions;
 }

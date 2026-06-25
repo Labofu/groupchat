@@ -5,6 +5,7 @@ import com.nafis.groupchat.entity.Reaction;
 import com.nafis.groupchat.entity.User;
 import com.nafis.groupchat.repository.MessageRepository;
 import com.nafis.groupchat.repository.ReactionRepository;
+import com.nafis.groupchat.repository.RoomMemberRepository;
 import com.nafis.groupchat.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,15 +19,18 @@ public class ReactionService {
     private final ReactionRepository reactionRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final RoomMemberRepository roomMemberRepository;
 
     public ReactionService(
             ReactionRepository reactionRepository,
             MessageRepository messageRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            RoomMemberRepository roomMemberRepository
     ) {
         this.reactionRepository = reactionRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.roomMemberRepository = roomMemberRepository;
     }
 
     public String toggleReaction(Long roomId, Long messageId, String reactionType, String email) {
@@ -38,6 +42,10 @@ public class ReactionService {
 
         if (!message.getRoom().getId().equals(roomId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message does not belong to this room");
+        }
+
+        if (!roomMemberRepository.existsByRoomAndUser(message.getRoom(), user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this room");
         }
 
         Optional<Reaction> existing = reactionRepository

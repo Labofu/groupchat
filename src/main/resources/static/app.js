@@ -6,7 +6,8 @@ const state = {
   activeRoomId: null,
   stompClient: null,
   wsMsgSubscription: null,
-  wsReactSubscription: null
+  wsReactSubscription: null,
+  wsEventSubscription: null
 };
 
 // API Base URL (same host since we serve static files from Spring Boot)
@@ -213,6 +214,10 @@ function disconnectWebSocket() {
     state.wsReactSubscription.unsubscribe();
     state.wsReactSubscription = null;
   }
+  if (state.wsEventSubscription) {
+    state.wsEventSubscription.unsubscribe();
+    state.wsEventSubscription = null;
+  }
   if (state.stompClient) {
     state.stompClient.deactivate();
     state.stompClient = null;
@@ -234,6 +239,10 @@ function subscribeToRoom(roomId) {
   if (state.wsReactSubscription) {
     state.wsReactSubscription.unsubscribe();
     state.wsReactSubscription = null;
+  }
+  if (state.wsEventSubscription) {
+    state.wsEventSubscription.unsubscribe();
+    state.wsEventSubscription = null;
   }
 
   const msgDestination = `/topic/room/${roomId}`;
@@ -264,6 +273,33 @@ function subscribeToRoom(roomId) {
       }
     } catch (e) {
       console.error('Error parsing WebSocket reaction:', e);
+    }
+  });
+
+  const eventDestination = `/topic/room/${roomId}/events`;
+  console.log('Subscribing to WebSocket events:', eventDestination);
+  state.wsEventSubscription = state.stompClient.subscribe(eventDestination, (message) => {
+    try {
+      const eventBody = JSON.parse(message.body);
+      console.log('WebSocket Event Received:', eventBody);
+      
+      if (eventBody.message) {
+        showToast(eventBody.message, 'success');
+        if (state.activeRoomId === roomId) {
+          appendSystemMessage(eventBody.message);
+          scrollChatToBottom();
+        }
+      }
+
+      // Automatically reload rooms to keep member counts in sidebar sync'd in real-time
+      loadRooms();
+      
+      // If we are currently viewing this room's details, reload them
+      if (state.activeRoomId === roomId && document.getElementById('modal-room-details').classList.contains('active')) {
+        loadRoomDetails(roomId);
+      }
+    } catch (e) {
+      console.error('Error parsing WebSocket event:', e);
     }
   });
 }
@@ -309,7 +345,7 @@ function renderRoomsList() {
       <div class="room-icon">${iconChar}</div>
       <div class="room-info">
         <div class="room-name">${escapeHTML(room.roomName)}</div>
-        <div class="room-meta">Created by ${escapeHTML(room.creator?.name || 'Unknown')}</div>
+        <div class="room-meta">${room.memberCount || 0} ${room.memberCount === 1 ? 'Member' : 'Members'}</div>
       </div>
     `;
 
@@ -349,7 +385,7 @@ async function selectRoom(roomId) {
     creatorSpan.parentNode.replaceChild(newCreatorSpan, creatorSpan);
     newCreatorSpan.addEventListener('click', () => {
       if (room.creator) {
-        showUserProfileModal(room.creator.id, room.creator.name, room.creator.email);
+        showUserProfileModal(room.creator.id);
       }
     });
   }
@@ -440,7 +476,7 @@ function appendMessage(msg) {
   const senderSpan = msgWrapper.querySelector('.msg-sender');
   if (senderSpan && !isSelf) {
     senderSpan.addEventListener('click', () => {
-      showUserProfileModal(msg.senderId, senderName, senderEmail);
+      showUserProfileModal(msg.senderId);
     });
   }
 }
@@ -900,15 +936,173 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnCloseProfileVal) {
     btnCloseProfileVal.addEventListener('click', () => toggleModal('modal-user-profile', false));
   }
+
+  // Room Details Modal close/open hooks
+  const btnRoomInfo = document.getElementById('btn-room-info');
+  if (btnRoomInfo) {
+    btnRoomInfo.addEventListener('click', () => {
+      if (state.activeRoomId) {
+        toggleModal('modal-room-details', true);
+        loadRoomDetails(state.activeRoomId);
+      }
+    });
+  }
+  const btnCloseRoomDetails = document.getElementById('btn-close-room-details');
+  if (btnCloseRoomDetails) {
+    btnCloseRoomDetails.addEventListener('click', () => toggleModal('modal-room-details', false));
+  }
+  const btnCloseRoomDetailsVal = document.getElementById('btn-close-view-room-details');
+  if (btnCloseRoomDetailsVal) {
+    btnCloseRoomDetailsVal.addEventListener('click', () => toggleModal('modal-room-details', false));
+  }
+
+  // Leave Room Action
+  const btnLeaveRoom = document.getElementById('btn-leave-room');
+  if (btnLeaveRoom) {
+    btnLeaveRoom.addEventListener('click', handleLeaveRoom);
+  }
 });
 
-function showUserProfileModal(userId, name, email) {
-  document.getElementById('modal-view-profile-name').textContent = name;
-  document.getElementById('modal-view-profile-email').textContent = email || 'No email shared';
-  document.getElementById('modal-view-profile-id').textContent = userId || '-';
-  
-  const avatarChar = name ? name.charAt(0).toUpperCase() : '?';
-  document.getElementById('modal-view-profile-avatar').textContent = avatarChar;
-  
-  toggleModal('modal-user-profile', true);
+function appendSystemMessage(content) {
+  const container = document.getElementById('chat-messages-container');
+  if (!container) return;
+
+  const msgWrapper = document.createElement('div');
+  msgWrapper.className = 'msg-wrapper system';
+  msgWrapper.style.alignSelf = 'center';
+  msgWrapper.style.margin = '0.5rem 0';
+  msgWrapper.innerHTML = `
+    <div class="msg-bubble system" style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-glass); color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 0.5rem; text-align: center;">
+      ℹ️ ${escapeHTML(content)}
+    </div>
+  `;
+  container.appendChild(msgWrapper);
+}
+
+async function loadRoomDetails(roomId) {
+  try {
+    const details = await apiFetch(`${API_BASE}/rooms/${roomId}`);
+    
+    document.getElementById('room-details-name').textContent = details.roomName;
+    document.getElementById('room-details-creator').textContent = details.creator?.name || 'Unknown';
+    
+    const creatorDiv = document.getElementById('room-details-creator');
+    creatorDiv.style.cursor = 'pointer';
+    creatorDiv.style.textDecoration = 'underline';
+    
+    const newCreatorDiv = creatorDiv.cloneNode(true);
+    creatorDiv.parentNode.replaceChild(newCreatorDiv, creatorDiv);
+    newCreatorDiv.addEventListener('click', () => {
+      if (details.creator) {
+        showUserProfileModal(details.creator.id);
+      }
+    });
+
+    let dateStr = 'Unknown';
+    if (details.createdAt) {
+      const date = new Date(details.createdAt);
+      dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    document.getElementById('room-details-date').textContent = dateStr;
+    document.getElementById('room-details-member-count').textContent = details.memberCount;
+
+    const listContainer = document.getElementById('room-details-members-list');
+    listContainer.innerHTML = '';
+    
+    const isCurrentCreator = details.creator?.id === state.user.id;
+
+    details.members.forEach(member => {
+      const item = document.createElement('div');
+      item.className = 'user-select-item';
+      item.innerHTML = `
+        <div class="user-select-info">
+          <span class="user-select-name">${escapeHTML(member.name)}</span>
+          <span class="user-select-email">${escapeHTML(member.email)}</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary btn-view-member-profile" data-user-id="${member.id}" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Profile</button>
+          ${isCurrentCreator && member.id !== state.user.id ? `
+            <button class="btn btn-danger btn-remove-member" data-user-id="${member.id}" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Remove</button>
+          ` : ''}
+        </div>
+      `;
+
+      item.querySelector('.btn-view-member-profile').addEventListener('click', () => {
+        showUserProfileModal(member.id);
+      });
+
+      if (isCurrentCreator && member.id !== state.user.id) {
+        item.querySelector('.btn-remove-member').addEventListener('click', async () => {
+          if (confirm(`Are you sure you want to remove ${member.name} from the room?`)) {
+            try {
+              await apiFetch(`${API_BASE}/rooms/${roomId}/members/${member.id}`, {
+                method: 'DELETE'
+              });
+              showToast(`${member.name} removed successfully.`);
+              loadRoomDetails(roomId);
+              loadRooms();
+            } catch (error) {
+              console.error('Failed to remove member:', error);
+              showToast('Failed to remove member.', 'error');
+            }
+          }
+        });
+      }
+
+      listContainer.appendChild(item);
+    });
+
+  } catch (error) {
+    console.error('Failed to load room details:', error);
+    showToast('Failed to load room details.', 'error');
+  }
+}
+
+async function showUserProfileModal(userId) {
+  try {
+    const userProfile = await apiFetch(`${API_BASE}/profile/user/${userId}`);
+    
+    document.getElementById('modal-view-profile-name').textContent = userProfile.name;
+    document.getElementById('modal-view-profile-email').textContent = userProfile.email || 'No email shared';
+    document.getElementById('modal-view-profile-id').textContent = userProfile.id || '-';
+    document.getElementById('modal-view-profile-joined').textContent = userProfile.joinedRooms || '0';
+    document.getElementById('modal-view-profile-created').textContent = userProfile.createdRooms || '0';
+    
+    const avatarChar = userProfile.name ? userProfile.name.charAt(0).toUpperCase() : '?';
+    document.getElementById('modal-view-profile-avatar').textContent = avatarChar;
+    
+    toggleModal('modal-user-profile', true);
+  } catch (error) {
+    console.error('Failed to load user profile:', error);
+    showToast('Failed to load user profile.', 'error');
+  }
+}
+
+async function handleLeaveRoom() {
+  const roomId = state.activeRoomId;
+  if (!roomId) return;
+
+  if (confirm('Are you sure you want to leave this room?')) {
+    try {
+      await apiFetch(`${API_BASE}/rooms/${roomId}/leave`, {
+        method: 'DELETE'
+      });
+
+      showToast('You left the room successfully.');
+      toggleModal('modal-room-details', false);
+      
+      state.activeRoomId = null;
+      await loadRooms();
+
+      if (state.rooms.length > 0) {
+        selectRoom(state.rooms[0].id);
+      } else {
+        document.getElementById('chat-active-window').style.display = 'none';
+        document.getElementById('chat-no-active-room').style.display = 'flex';
+      }
+    } catch (error) {
+      console.error('Failed to leave room:', error);
+      showToast('Failed to leave room.', 'error');
+    }
+  }
 }

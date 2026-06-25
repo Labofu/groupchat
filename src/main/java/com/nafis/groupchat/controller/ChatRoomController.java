@@ -2,8 +2,9 @@ package com.nafis.groupchat.controller;
 
 import com.nafis.groupchat.dto.AddMemberRequest;
 import com.nafis.groupchat.dto.CreateRoomRequest;
-import com.nafis.groupchat.entity.ChatRoom;
-import com.nafis.groupchat.entity.RoomMember;
+import com.nafis.groupchat.dto.RoomMemberDTO;
+import com.nafis.groupchat.dto.RoomDetailsDTO;
+import com.nafis.groupchat.dto.RoomResponseDTO;
 import com.nafis.groupchat.service.ChatRoomService;
 import com.nafis.groupchat.service.RoomMemberService;
 import org.springframework.security.core.Authentication;
@@ -24,17 +25,14 @@ public class ChatRoomController {
     ) {
         this.chatRoomService = chatRoomService;
         this.roomMemberService = roomMemberService;
-
     }
 
     @PostMapping
-    public ChatRoom createRoom(
+    public RoomResponseDTO createRoom(
             @RequestBody CreateRoomRequest request,
             Authentication authentication
     ) {
-
         String email = authentication.getName();
-
         return chatRoomService.createRoom(
                 request,
                 email
@@ -49,22 +47,53 @@ public class ChatRoomController {
         try {
             roomMemberService.addMember(roomId, request.getUserId());
             return "Member Added";
-
         } catch (Exception e) {
             e.printStackTrace();
             return e.getMessage();
         }
     }
 
-    @GetMapping("/{roomId}/members")
-    public List<RoomMember> getMembers(
-            @PathVariable Long roomId
+    @GetMapping("/{roomId}")
+    public RoomDetailsDTO getRoomDetails(
+            @PathVariable Long roomId,
+            Authentication authentication
     ) {
-        return roomMemberService.getMembers(roomId);
+        String email = authentication.getName();
+        return chatRoomService.getRoomDetails(roomId, email);
+    }
+
+    @GetMapping("/{roomId}/members")
+    public List<RoomMemberDTO> getMembers(
+            @PathVariable Long roomId,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        return roomMemberService.getRoomMembers(roomId, email);
+    }
+
+    @DeleteMapping("/{roomId}/members/{userId}")
+    public String removeMember(
+            @PathVariable Long roomId,
+            @PathVariable Long userId,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        roomMemberService.removeMember(roomId, userId, email);
+        return "Member removed successfully";
+    }
+
+    @DeleteMapping("/{roomId}/leave")
+    public String leaveRoom(
+            @PathVariable Long roomId,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        chatRoomService.leaveRoom(roomId, email);
+        return "You left the room successfully";
     }
 
     @GetMapping
-    public List<ChatRoom> getAllRooms(Authentication authentication) {
+    public List<RoomResponseDTO> getAllRooms(Authentication authentication) {
         if (authentication == null) {
             return java.util.Collections.emptyList();
         }

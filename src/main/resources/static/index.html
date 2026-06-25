@@ -164,6 +164,7 @@
                 <div class="chat-room-subtitle">Created by <span id="chat-active-room-creator">Admin</span></div>
               </div>
               <div class="chat-actions">
+                <button class="btn btn-secondary" id="btn-room-info" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Room Info</button>
                 <button class="btn btn-secondary" id="btn-open-add-member" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Add Member</button>
               </div>
             </div>
@@ -233,6 +234,40 @@
     </div>
   </div>
 
+  <!-- Room Details Modal -->
+  <div class="modal-overlay" id="modal-room-details">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Room Details</span>
+        <button class="modal-close" id="btn-close-room-details">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem;">
+        <div class="form-group">
+          <label>Room Name</label>
+          <div id="room-details-name" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 1rem;">-</div>
+        </div>
+        <div class="form-group">
+          <label>Created By</label>
+          <div id="room-details-creator" style="margin-bottom: 1rem;">-</div>
+        </div>
+        <div class="form-group">
+          <label>Created Date</label>
+          <div id="room-details-date" style="margin-bottom: 1rem;">-</div>
+        </div>
+        <div class="form-group">
+          <label>Total Members: <span id="room-details-member-count">0</span></label>
+          <div class="user-select-list" id="room-details-members-list" style="max-height: 200px; overflow-y: auto;">
+            <!-- Dynamically populated room members -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button type="button" class="btn btn-danger" id="btn-leave-room">Leave Room</button>
+        <button type="button" class="btn btn-secondary" id="btn-close-view-room-details">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- User Profile Modal -->
   <div class="modal-overlay" id="modal-user-profile">
     <div class="modal">
@@ -249,6 +284,14 @@
           <div class="profile-item">
             <span class="profile-label">User ID</span>
             <span class="profile-value" id="modal-view-profile-id">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="profile-label">Joined Rooms</span>
+            <span class="profile-value" id="modal-view-profile-joined">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="profile-label">Created Rooms</span>
+            <span class="profile-value" id="modal-view-profile-created">-</span>
           </div>
         </div>
       </div>

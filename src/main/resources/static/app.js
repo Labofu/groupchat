@@ -172,6 +172,9 @@ function connectWebSocket() {
 
   state.stompClient = new StompJs.Client({
     brokerURL: brokerURL,
+    connectHeaders: {
+      Authorization: `Bearer ${state.token}`
+    },
     reconnectDelay: 5000,
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
@@ -501,10 +504,7 @@ async function toggleReaction(messageId, reactionType) {
         destination: `/app/room/${state.activeRoomId}/react`,
         body: JSON.stringify({
           messageId,
-          senderId: state.user.id,
-          senderName: state.user.name,
-          reactionType,
-          action // 'ADDED' or 'REMOVED'
+          reactionType
         })
       });
     }
@@ -570,11 +570,7 @@ async function handleSendMessage(e) {
       state.stompClient.publish({
         destination: `/app/room/${state.activeRoomId}/send`,
         body: JSON.stringify({
-          id: savedMsg.id,
-          content: content,
-          senderName: state.user.name,
-          senderId: state.user.id,
-          senderEmail: state.user.email
+          content
         })
       });
     } else {

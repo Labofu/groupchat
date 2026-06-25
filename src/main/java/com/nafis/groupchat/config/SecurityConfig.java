@@ -33,10 +33,10 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/chat").permitAll()
-                        .requestMatchers("/chat**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/chat", "/chat/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/style.css", "/app.js").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtFilter,
